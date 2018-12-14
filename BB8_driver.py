@@ -781,7 +781,7 @@ class Sphero(threading.Thread):
         # this is larger than any single packet
         self.recv(1024)
 
-    def recv(self, num_bytes):
+    def recv(self, num_bytes): #num_bytes is never used
         '''
         Commands are acknowledged from the Sphero -> Client in the
         following format::
@@ -825,11 +825,12 @@ class Sphero(threading.Thread):
           complement)
 
         '''
-
+        #this seems like it would parse a packet if data was a packet
+        #but it's not
         data = self.raw_data_buf
-        while len(data) > 5:
-            if data[:2] == RECV['SYNC']:
-                print "got response packet"
+        while len(data) > 5: #it's trying to pull out sub packets?
+            if data[:2] == RECV['SYNC']: #correct postion in packet for this flag
+                print "got response packet" #response from a command sent to robot
                 # response packet
                 data_length = ord(data[4])
                 if data_length + 5 <= len(data):
@@ -839,7 +840,7 @@ class Sphero(threading.Thread):
                     break
                     # print "Response packet", self.data2hexstr(data_packet)
 
-            elif data[:2] == RECV['ASYNC']:
+            elif data[:2] == RECV['ASYNC']: #this would be telemetry packets
                 data_length = (ord(data[3]) << 8) + ord(data[4])
                 if data_length + 5 <= len(data):
                     data_packet = data[:(5 + data_length)]
@@ -860,7 +861,8 @@ class Sphero(threading.Thread):
                     print "got a packet that isn't streaming"
             else:
                 raise RuntimeError("Bad SOF : " + self.data2hexstr(data))
-        self.raw_data_buf = data
+                #this happens everytime because there is not packet
+        self.raw_data_buf = data # is there a benefit to putting back what wasn't used?
 
 
     def parse_pwr_notify(self, data, data_length):
