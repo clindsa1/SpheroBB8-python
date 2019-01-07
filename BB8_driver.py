@@ -6,9 +6,10 @@ import sys
 import threading
 import time
 from bluepy import btle
+import logging
 
 #address of the robot
-MAC_ADDR = 'CB:8C:3B:CA:0D:28'
+MAC_ADDR = 'XX:XX:XX:XX:XX:XX' #use address of your robot
 
 # These are the message response code that can be return by Sphero.
 MRSP = dict(
@@ -240,6 +241,7 @@ class Sphero(threading.Thread):
     def __init__(self, target_name='Sphero'):
         threading.Thread.__init__(self)
         self.target_name = target_name
+	logging.debug (threading.current_thread().name + " Sphero CREATED")
         self.bt = None
         self.deviceAddress = MAC_ADDR # Use "sudo hcitool lescan" to find BB8's MAC address input it at deviceAddress = 
         self.shutdown = False
@@ -255,6 +257,7 @@ class Sphero(threading.Thread):
         self._sync_callback_queue = []
 
     def connect(self):
+	logging.debug (threading.current_thread().name + " Sphero CONNECT")
         self.bt = BTInterface(self.deviceAddress)
         # self.is_connected = self.bt.connect()
         self.is_connected = True
@@ -818,13 +821,21 @@ class Sphero(threading.Thread):
         '''
 
         #data is a string
-        print "Receiving: ", self.data2hexstr(data)
+	logging.debug (threading.current_thread().name + " Sphero RECEIVED " + self.data2hexstr(data))
+        if len(data) == 0:
+	    logging.warning ("received empty packet")
+	    return
+        logging.debug  (" Receiving: " + self.data2hexstr(data))
         if list(data[:2]) == RECV['SYNC']: #have to convert string to a list before compare
-            print "That's a response packet"
+            logging.debug  ("That's a response packet")
         elif list(data[:2]) == RECV['ASYNC']:
-            print "That's telemetry"
-            if data[2:3] == IDCODE['DATA_STRM']: #single char so not list
-			    print "Sensor data"
+            logging.debug  ("That's telemetry")
+            if len(data) > 7 and data[2:3] == IDCODE['DATA_STRM']: #single char so not list
+                logging.debug ("generating event")
+                dlen = ord(data[4])
+                #send data into a Queue
+        else:
+	    logging.warning ("BAD PACKET")
         
         '''
         while len(data) > 5:
@@ -928,6 +939,7 @@ class Sphero(threading.Thread):
 
 
     def disconnect(self):
+	logging.debug (threading.current_thread().name + " Sphero DISCONNECT")
         self.is_connected = False
         #self.bt.disconnect()
         self.bt.peripheral.disconnect()
