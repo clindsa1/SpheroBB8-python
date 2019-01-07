@@ -4,6 +4,11 @@ import struct
 import time
 import BB8_driver
 import sys
+import logging
+
+logging.basicConfig(filename="BB8_log.log", level=logging.DEBUG, format='%(asctime)s - %(levelname)s - %(message)s')
+logging.debug("===Log started===")
+
 print "connecting"
 bb8 = BB8_driver.Sphero()
 bb8.connect()
@@ -30,4 +35,5 @@ for i in range(5):
 bb8.join()
 bb8.disconnect()
 print "disconnected"
+logging.debug("===End of Script===")
 sys.exit(1)
